@@ -1,0 +1,149 @@
+/**
+ * MSPM0G3507 PID Line-Following Car - SysConfig
+ * SDK: mspm0_sdk@2.10.00.04
+ *
+ * SysConfig handles: GPIO, UART0, ADC12, PID Timer
+ * PWM (TIMA0/TIMA1) is initialized manually in motor.c
+ * @cliArgs --device "MSPM0G350X" --part "Default" --package "LQFP-64(PM)" --product "mspm0_sdk@2_10_00_04"
+ * @v2CliArgs --device "MSPM0G3507" --package "LQFP-64(PM)" --product "mspm0_sdk@2_10_00_04"
+ */
+
+/**
+ * Import the modules used in this configuration.
+ */
+const Board         = scripting.addModule("/ti/driverlib/Board");
+const SYSCTL        = scripting.addModule("/ti/driverlib/SYSCTL");
+const GPIO          = scripting.addModule("/ti/driverlib/GPIO", {}, false);
+const GPIO1         = GPIO.addInstance();   // Motor A direction (AIN1/AIN2)
+const GPIO2         = GPIO.addInstance();   // Motor B direction (BIN1/BIN2)
+const GPIO3         = GPIO.addInstance();   // Motor PWM pins (PA28, PB4)
+const GPIO4         = GPIO.addInstance();   // Encoder inputs with interrupt (PB2/PB3/PB6/PB7)
+const ADC12         = scripting.addModule("/ti/driverlib/ADC12", {}, false);
+const ADC12_1       = ADC12.addInstance();  // Grayscale sensor
+const UART          = scripting.addModule("/ti/driverlib/UART", {}, false);
+const UART1         = UART.addInstance();    // Debug UART0
+const TIMER         = scripting.addModule("/ti/driverlib/TIMER", {}, false);
+const TIMER1        = TIMER.addInstance();   // PID control timer
+
+/**
+ * Write custom configuration values to the imported modules.
+ */
+
+// ======== Board / Debug ========
+Board.peripheral.$assign          = "DEBUGSS";
+Board.peripheral.swclkPin.$assign = "PA20";
+Board.peripheral.swdioPin.$assign = "PA19";
+
+// ======== SYSOSC 32MHz ========
+SYSCTL.clockTreeEn     = false;
+
+// ======== GPIO1: Motor A direction (AIN1=PA26, AIN2=PA27) ========
+GPIO1.$name                    = "Motor_A_Dir";
+GPIO1.port                     = "PORTA";
+GPIO1.associatedPins.create(2);
+GPIO1.associatedPins[0].$name  = "AIN1";
+GPIO1.associatedPins[0].pin.$assign = "PA26";
+GPIO1.associatedPins[1].$name  = "AIN2";
+GPIO1.associatedPins[1].pin.$assign = "PA27";
+
+// ======== GPIO2: Motor B direction (BIN1=PA25, BIN2=PB24) ========
+GPIO2.$name                    = "Motor_B_Dir";
+GPIO2.associatedPins.create(2);
+GPIO2.associatedPins[0].$name  = "BIN1";
+GPIO2.associatedPins[0].pin.$assign = "PA25";
+GPIO2.associatedPins[1].$name  = "BIN2";
+GPIO2.associatedPins[1].pin.$assign = "PB24";
+
+// ======== GPIO3: PWM output pins (PA28=TIMA0_C2, PB4=TIMA1_C0) ========
+GPIO3.$name                    = "Motor_PWM";
+GPIO3.associatedPins.create(2);
+GPIO3.associatedPins[0].$name  = "PWMA";
+GPIO3.associatedPins[0].assignedPort = "PORTA";
+GPIO3.associatedPins[0].assignedPin  = "28";
+GPIO3.associatedPins[0].pin.$assign  = "PA28";
+GPIO3.associatedPins[1].$name  = "PWMB";
+GPIO3.associatedPins[1].assignedPort = "PORTB";
+GPIO3.associatedPins[1].assignedPin  = "4";
+GPIO3.associatedPins[1].pin.$assign  = "PB4";
+
+// ======== ADC12_1: 3-channel Grayscale sensor on PB17/PB18/PB19 (ADC1_CH4/5/6) ========
+ADC12_1.$name                         = "Grayscale_ADC";
+ADC12_1.peripheral.$assign            = "ADC1";
+ADC12_1.chosenProfile                 = "custom";
+ADC12_1.sampClkSrc                    = "DL_ADC12_CLOCK_ULPCLK";
+ADC12_1.sampClkDiv                    = "DL_ADC12_CLOCK_DIVIDE_8";
+ADC12_1.samplingOperationMode         = "sequence";
+ADC12_1.startAdd                      = 0;
+ADC12_1.endAdd                        = 2;
+ADC12_1.repeatMode                    = false;
+ADC12_1.sampleMode                    = "DL_ADC12_SAMPLING_SOURCE_AUTO";
+ADC12_1.dataFormat                    = "DL_ADC12_SAMP_CONV_DATA_FORMAT_UNSIGNED";
+ADC12_1.resolution                    = "DL_ADC12_SAMP_CONV_RES_12_BIT";
+ADC12_1.powerDownMode                 = "DL_ADC12_POWER_DOWN_MODE_MANUAL";
+ADC12_1.adcMem0chansel                = "DL_ADC12_INPUT_CHAN_5";
+ADC12_1.adcMem0vref                   = "VDDA";
+ADC12_1.adcMem0stime                  = "DL_ADC12_SAMPLE_TIMER_SOURCE_SCOMP0";
+ADC12_1.adcMem1chansel                = "DL_ADC12_INPUT_CHAN_2";
+ADC12_1.adcMem1vref                   = "VDDA";
+ADC12_1.adcMem1stime                  = "DL_ADC12_SAMPLE_TIMER_SOURCE_SCOMP0";
+ADC12_1.adcMem2chansel                = "DL_ADC12_INPUT_CHAN_6";
+ADC12_1.adcMem2vref                   = "VDDA";
+ADC12_1.adcMem2stime                  = "DL_ADC12_SAMPLE_TIMER_SOURCE_SCOMP0";
+ADC12_1.sampleTime0                   = "20us";
+ADC12_1.peripheral.adcPin2.$assign    = "PA17";
+ADC12_1.peripheral.adcPin5.$assign    = "PB18";
+ADC12_1.peripheral.adcPin6.$assign    = "PB19";
+
+// ======== UART1: Debug UART0 on PA0(TX)/PA1(RX) ========
+UART1.$name                    = "Debug_UART";
+UART1.targetBaudRate           = 115200;
+UART1.peripheral.$assign       = "UART0";
+UART1.peripheral.txPin.$assign = "PA0";
+UART1.peripheral.rxPin.$assign = "PA1";
+
+// ======== TIMER1: PID control loop 10ms ========
+TIMER1.$name              = "PID_Timer";
+TIMER1.interrupts         = ["LOAD"];
+TIMER1.interruptPriority  = "2";
+TIMER1.timerPeriod        = "10ms";
+TIMER1.timerMode          = "PERIODIC_UP";
+TIMER1.peripheral.$assign = "TIMG12";
+
+// ======== GPIO4: Encoder inputs with both-edge interrupt ========
+// Left encoder:  PB6(E1A), PB7(E1B)
+// Right encoder: PB2(E2A), PB3(E2B)
+GPIO4.$name                              = "Encoder_GPIO";
+GPIO4.port                               = "PORTB";
+GPIO4.associatedPins.create(4);
+GPIO4.associatedPins[0].$name            = "LEFT_A";
+GPIO4.associatedPins[0].direction        = "INPUT";
+GPIO4.associatedPins[0].assignedPort     = "PORTB";
+GPIO4.associatedPins[0].assignedPin      = "6";
+GPIO4.associatedPins[0].interruptEn      = true;
+GPIO4.associatedPins[0].polarity         = "RISE_FALL";
+GPIO4.associatedPins[0].internalResistor = "PULL_UP";
+GPIO4.associatedPins[0].pin.$assign      = "PB6";
+GPIO4.associatedPins[1].$name            = "LEFT_B";
+GPIO4.associatedPins[1].direction        = "INPUT";
+GPIO4.associatedPins[1].assignedPort     = "PORTB";
+GPIO4.associatedPins[1].assignedPin      = "7";
+GPIO4.associatedPins[1].interruptEn      = true;
+GPIO4.associatedPins[1].polarity         = "RISE_FALL";
+GPIO4.associatedPins[1].internalResistor = "PULL_UP";
+GPIO4.associatedPins[1].pin.$assign      = "PB7";
+GPIO4.associatedPins[2].$name            = "RIGHT_A";
+GPIO4.associatedPins[2].direction        = "INPUT";
+GPIO4.associatedPins[2].assignedPort     = "PORTB";
+GPIO4.associatedPins[2].assignedPin      = "2";
+GPIO4.associatedPins[2].interruptEn      = true;
+GPIO4.associatedPins[2].polarity         = "RISE_FALL";
+GPIO4.associatedPins[2].internalResistor = "PULL_UP";
+GPIO4.associatedPins[2].pin.$assign      = "PB2";
+GPIO4.associatedPins[3].$name            = "RIGHT_B";
+GPIO4.associatedPins[3].direction        = "INPUT";
+GPIO4.associatedPins[3].assignedPort     = "PORTB";
+GPIO4.associatedPins[3].assignedPin      = "3";
+GPIO4.associatedPins[3].interruptEn      = true;
+GPIO4.associatedPins[3].polarity         = "RISE_FALL";
+GPIO4.associatedPins[3].internalResistor = "PULL_UP";
+GPIO4.associatedPins[3].pin.$assign      = "PB3";

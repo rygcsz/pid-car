@@ -1,0 +1,12 @@
+"./board.o"
+"./empty.o"
+"./ti_msp_dl_config.o"
+"./startup_mspm0g350x_ticlang.o"
+"./grayscale.o"
+"./pid.o"
+"./uart_debug.o"
+"./motor/encoder.o"
+"./motor/motor.o"
+-l"./device_linker.cmd"
+-ldevice.cmd.genlibs
+-llibc.a
