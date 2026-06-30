@@ -18,12 +18,12 @@
 #define LINE_PID_OUT_LIMIT  15.0f   /* Max PID output magnitude */
 
 /* ========== Motion Parameters ========== */
-#define BASE_PWM            750     /* Base PWM for straight line */
+#define BASE_PWM            525     /* Base PWM for straight line (750*0.7) */
 #define TURN_SCALE          80.0f   /* PWM per unit of PID output */
 #define RIGHT_TRIM          0.90f   /* Right motor trim: <1.0 if right is faster */
-#define MAX_SPEED           1500    /* Max PWM duty */
+#define MAX_SPEED           1050    /* Max PWM duty (1500*0.7) */
 #define PWM_PERIOD          3200    /* PWM period (10kHz @ 32MHz) */
-#define SEARCH_PWM          800     /* PWM for pivot rotation during line search */
+#define SEARCH_PWM          560     /* PWM for arc search during line loss (800*0.7) */
 
 /* ========== Speed PID Parameters (inner loop) ========== */
 /* Used when encoder feedback is available for cascade PID */
@@ -33,7 +33,7 @@
 #define SPEED_PID_INT_LIMIT 400.0f
 #define SPEED_PID_OUT_LIMIT 500.0f
 #define BASE_SPEED_COUNTS   5       /* Encoder counts/10ms at SPEED_FF_PWM (calibrated from data) */
-#define SPEED_FF_PWM        750
+#define SPEED_FF_PWM        525
 #define TURN_GAIN           2.0f    /* For cascade PID: amplifies differential */
 
 /* ========== Grayscale Sensor ========== */
